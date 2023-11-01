@@ -1,0 +1,128 @@
+---
+title: "Covid_Analysis_Project"
+output: html_document
+date: "2023-10-29"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+rm(list=ls()) # removes all variables stored previously
+library(Hmisc) # import
+```
+
+
+We have COVID 19 dataset from Kaggle -> https://www.kaggle.com/datasets/sudalairajkumar/novel-corona-virus-2019-dataset/versions/25?resource=download
+
+
+```{r}
+data <- read.csv("D:\\Files\\Projects\\Covid19_R\\Data\\COVID19_line_list_data.csv")
+```
+
+Taking a quick look at the data:
+
+```{r}
+describe(data)
+```
+Viewing the data as present in tabular format ->
+
+```{r}
+View(data)
+```
+
+We observe that we have 1085 rows and 27 columns. Scrolling down, we see 183 are missing genders and if we scroll to death, we see it has multiple values apart from 0 and 1
+
+```{r}
+unique(data$death)
+```
+
+We can cleaned up death column:
+
+```{r}
+data$death_dummy <- as.integer(data$death != 0)
+```
+
+For validation, we see if there are just 2 unique values present in data or not: 
+```{r}
+unique(data$death_dummy)
+```
+Now, we can find death rate.
+
+##Death rate
+
+```{r}
+sum(data$death_dummy) / nrow(data)
+```
+
+
+## AGE
+According to media, the average person that dies from corona virus is older than the person who survives. Can we prove if this is correct using out data? 
+
+## Claim: people who die are older
+
+```{r}
+dead = subset(data, death_dummy == 1)
+alive = subset(data, death_dummy == 0)
+mean(dead$age)
+mean(alive$age)
+```
+Oh, we got NA. Why is that?
+If we see the data, some of entries have NA. To remove those ->
+
+```{r}
+mean(dead$age, na.rm = TRUE)
+mean(alive$age, na.rm = TRUE)
+```
+Difference between alive and dead age is 28. 
+#Is this statistically significant?
+
+For this, we will use the t_test statistics
+Let's try for confidence interval of 95%
+```{r}
+t.test(alive$age, dead$age, alternative="two.sided", conf.level = 0.95)
+```
+We see there's a 95$% chance that the difference between person who is alive and dead is between -24.2 and -16.7. So, we can say on average the person who is alive is much much younger.
+
+Let's try for 99% and we get similar values
+```{r}
+t.test(alive$age, dead$age, alternative="two.sided", conf.level = 0.99)
+```
+We can also see that the p-value is 2.2e-16, which is basically 0.
+So we can say there's 0% chance the ages in our population are actually equal.
+
+
+Normally, if p-value < 0.05, we reject null hypothesis
+Here, p-value ~ 0, so we reject the null hypothesis and say that people indeed dying from COVID are much older than the ones not dying.
+Conclude that this is statistically significant
+
+
+Let's try something similar for the Gender
+## GENDER
+Are women more likely to die from COVID or it's vice versa? Let's find out.
+
+## Claim: gender has no effect
+
+```{r}
+men = subset(data, gender == "male")
+women = subset(data, gender == "female")
+mean(men$death_dummy, na.rm = TRUE) 
+mean(women$death_dummy, na.rm = TRUE)
+```
+
+We can see that men have a death rate of 8.5% as opposed to 3.6% of women. That is pretty large discrepancy.
+
+Is this statistically significant? Let's use t-test
+
+```{r}
+t.test(men$death_dummy, women$death_dummy, alternative="two.sided", conf.level = 0.99)
+```
+
+99% confidence: men have from 0.8% to 8.8% higher chance of dying.
+p-value = 0.002 < 0.05, sonwe reject the null hypothesis and conclude this is statistically significant
+Therefore, the men do have a higher death rate as compared to women
+
+
+```
+
