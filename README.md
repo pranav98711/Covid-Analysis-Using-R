@@ -107,7 +107,7 @@ mean(alive$age, na.rm = TRUE)
 
 ![image](https://github.com/pranav98711/Covid-Analysis-Using-R/assets/58882791/778bf505-a6b6-417c-b3ba-82baa214b1a7)
 
-Difference between alive and dead age is 28. Is this statistically significant?
+Difference between alive and dead age is 20. Is this statistically significant?
 
 For this, we will use the t_test statistics
 Let's try for confidence interval of 95%
